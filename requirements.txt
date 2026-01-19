@@ -1,0 +1,5 @@
+aiogram==3.24.0
+fastapi==0.128.0
+playwright==1.57.0
+sqlalchemy==2.0.45
+uvicorn==0.40.0
