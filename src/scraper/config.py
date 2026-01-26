@@ -5,6 +5,7 @@ Provide scraping config.
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 
+from src.enums.scraper import ParseMode
 from src.structures.scraper import ParserFieldConfig
 
 
@@ -38,3 +39,21 @@ BOOK_CONFIG = {
         'genres': ParserFieldConfig(selector='.catalog-detail-property:has-text(\'Жанр\') .val'),
     }
 }
+
+
+PUBLISHERS_CONFIG = [
+    PublisherConfig(
+        name='КСД',
+        config={
+            'book_urls': ParserFieldConfig(selector='.ui-catalog-card--variant-default', attribute='href', mode=ParseMode.ALL)
+        },
+        book_page_config={
+            'title': ParserFieldConfig(selector='.MuiStack-root h1.MuiTypography-root'),
+            'author': ParserFieldConfig(selector='[class*="-full-specifications"] p:has-text(\'Автор\')  >> xpath=following-sibling::*[1]'),
+            'publisher': ParserFieldConfig(selector='[class*="-full-specifications"] p:has-text(\'Видавництво\')  >> xpath=following-sibling::*[1]'),
+            'isbn': ParserFieldConfig(selector='[class*="-full-specifications"] p:has-text(\'ISBN\')  >> xpath=following-sibling::*[1]'),
+            'genres': ParserFieldConfig(selector='[class*="-full-specifications"] p:has-text(\'Розділ\')  >> xpath=following-sibling::*[1]'),
+        },
+        coming_soon_books_url='https://ksd.ua/books/special/anonsy/page-${page_number}'
+    )
+]
