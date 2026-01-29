@@ -4,6 +4,7 @@ Provide models for database.
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     create_engine,
     Column,
     DateTime,
@@ -36,7 +37,7 @@ class Books(Base):
     """
     __tablename__ = "books"
 
-    isbn: Mapped[int] = mapped_column(Integer, primary_key=True)
+    isbn: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     url: Mapped[str] = mapped_column(String)
     title: Mapped[str] = mapped_column(String)
     author: Mapped[str] = mapped_column(String)
@@ -49,14 +50,18 @@ class Books(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
 
-class Alerts(Base):
+class BookAlerts(Base):
     """
     Alerts table.
     """
-    __tablename__ = "alerts"
+    __tablename__ = "book_alerts"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    isbn: Mapped[int] = mapped_column(Integer, ForeignKey(Books.isbn))
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    isbn: Mapped[int] = mapped_column(BigInteger, ForeignKey(Books.isbn))
     status_before: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
     status_after: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+engine = create_engine('postgresql+psycopg2://test:test@127.0.0.1:5432/test')
+Base.metadata.create_all(engine)

@@ -3,15 +3,12 @@ Provide implementation of books repository.
 """
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 
-from src.enums.book import STATUS_REWRITE_RULES
 from src.external_services.database.models import Books
 from src.repositories.base import PostgresRepository
 from src.repositories.errors import IsbnBatchIsTooBigError
-from src.structures.book import (
-    Book,
-    BookStatus, BookAlert,
-)
+from src.structures.book import Book
 
 
 MAX_ISBN_RESULTS = 100
@@ -32,9 +29,9 @@ class BooksRepository(PostgresRepository):
         Returns:
             Book object.
         """
-        with self._session() as session:
+        async with self._session() as session:
             query = select(Books).where(Books.isbn == isbn)
-            result = await (session.execute(query)).one_or_none()
+            result = (await session.execute(query)).one_or_none()
 
         if not result:
             return None
@@ -64,9 +61,9 @@ class BooksRepository(PostgresRepository):
         if len(isbn_batch) > MAX_ISBN_RESULTS:
             raise IsbnBatchIsTooBigError
 
-        with self._session() as session:
+        async with self._session() as session:
             query = select(Books).where(Books.isbn.in_(isbn_batch))
-            results = await (session.execute(query)).all()
+            results = (await session.execute(query)).all()
 
         prepared_results = []
         for result in results:
@@ -85,50 +82,27 @@ class BooksRepository(PostgresRepository):
 
         return prepared_results
 
-    async def _prepare_upsert_data(self, books: list[Book], write_alerts: bool = True) -> list[Book]:
-        """
-        Prepare upsert data for books.
-
-        Args:
-            books: list of Book objects.
-            write_alerts: whether to write alerts to database.
-
-        Returns:
-            prepared list of Book objects.
-        """
-        alerts = []
-
-        existing_books = await self.get_by_isbn_batch(isbn_batch=[book.isbn for book in books])
-        existing_books_by_isbn = {book.isbn: book for book in existing_books}
-
-        prepared_data = []
-        for book in books:
-            existing_book = existing_books_by_isbn.get(book.isbn)
-            if not existing_book:
-                prepared_data.append(book)
-                alerts.append(BookAlert(isbn=book.isbn, status_after=book.status))
-                continue
-
-            if existing_book.status in STATUS_REWRITE_RULES.get(book.status, []):
-                prepared_data.append(book)
-                alerts.append(BookAlert(isbn=book.isbn, status_before=existing_book.status, status_after=book.status))
-
-            if existing_book.genres and book.genres and existing_book.genres != book.genres:
-                combined_genres = list(set(existing_book.genres + book.genres))
-                existing_book.genres = combined_genres
-                prepared_data.append(existing_book)
-
-        if alerts and write_alerts:
-            await self.write_alerts(alerts=alerts)
-
-        return prepared_data
-
-    async def upsert_book_batch(self, books: list[Book], write_alerts: bool = True) -> None:
+    async def upsert_book_batch(self, books: list[Book]) -> None:
         """
         Upsert book batch.
 
         Args:
             books: list of Book objects.
-            write_alerts: whether to write alerts to database.
         """
-        pass
+        stmt = insert(Books)
+        stmt.on_conflict_do_update(
+            index_elements=['isbn'],
+            set_={
+                Books.title.key: stmt.excluded.title,
+                Books.author.key: stmt.excluded.author,
+                Books.publisher_raw.key: stmt.excluded.publisher,
+                Books.publisher.key: stmt.excluded.publisher,
+                Books.url.key: stmt.excluded.url,
+                Books.status.key: stmt.excluded.status,
+                Books.genres.key: stmt.excluded.genres,
+                Books.genres_raw.key: stmt.excluded.genres_raw,
+            }
+        )
+        async with self._session() as session:
+            await session.execute(stmt, [book.model_dump(mode='json') for book in books])
+            await session.commit()

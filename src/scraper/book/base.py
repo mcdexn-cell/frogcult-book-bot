@@ -3,7 +3,7 @@ Provide base book scraper implementation.
 """
 import asyncio
 
-from src.enums.book import BookStatus
+from src.enums.book import BookStatus, BookGenre
 from src.scraper.engine import PlaywrightScraperEngine
 from src.scraper.extractors.service import PhraseExtractionService
 from src.scraper.utils import parse_config
@@ -19,16 +19,16 @@ class BaseBookScraper:
     Provide base book scraper implementation.
     """
     def __init__(
-            self,
-            scraper: PlaywrightScraperEngine,
-            genre_extractor: PhraseExtractionService,
-            semaphore: asyncio.Semaphore | None = None,
+        self,
+        scraper_engine: PlaywrightScraperEngine,
+        genre_extractor: PhraseExtractionService,
+        semaphore: asyncio.Semaphore | None = None,
     ):
         """
         Construct the object.
         """
         self._semaphore = semaphore or asyncio.Semaphore(5)
-        self._scraper = scraper
+        self._scraper = scraper_engine
         self._genre_extractor = genre_extractor
 
     async def scrape(

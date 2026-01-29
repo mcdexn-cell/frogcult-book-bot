@@ -21,7 +21,7 @@ class BasePublisherScraper:
     """
     def __init__(
         self,
-        scraper: PlaywrightScraperEngine,
+        scraper_engine: PlaywrightScraperEngine,
         config: PublisherConfig,
         book_scraper: BaseBookScraper,
     ):
@@ -32,7 +32,7 @@ class BasePublisherScraper:
             config: publisher config.
             book_scraper: book scraper.
         """
-        self._scraper = scraper
+        self._scraper = scraper_engine
         self._config = config
         self._book_scraper = book_scraper
 
@@ -63,7 +63,6 @@ class BasePublisherScraper:
         page_number = 1
         while True:
             page_url = Template(url).substitute(page_number=page_number)
-            print(page_url)
             async with self._scraper.get_page() as page:
                 await page.goto(url=page_url)
                 book_urls = await parse_config(config=config, target=page)
