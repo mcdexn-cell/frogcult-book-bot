@@ -10,7 +10,7 @@ class ScraperSettings(BaseModel):
     """
     Scraper settings.
     """
-    book_batch_size: int = 100
+    book_batch_size: int = 10
 
 
 class Settings(BaseSettings):
@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     scraper: ScraperSettings = ScraperSettings()
 
     postgres_url: str
+    bot_token: str
 
 
 settings = Settings()

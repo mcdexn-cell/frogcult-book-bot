@@ -63,14 +63,15 @@ class BooksRepository(PostgresRepository):
 
         async with self._session() as session:
             query = select(Books).where(Books.isbn.in_(isbn_batch))
-            results = (await session.execute(query)).all()
+            results = (await session.execute(query)).scalars().all()
 
         prepared_results = []
         for result in results:
-            Book(
+            prepared_result = Book(
                 title=result.title,
                 author=result.author,
                 isbn=result.isbn,
+                source=result.source,
                 genres=result.genres,
                 genres_raw=result.genres_raw,
                 publisher=result.publisher,
@@ -78,7 +79,7 @@ class BooksRepository(PostgresRepository):
                 url=result.url,
                 status=result.status,
             )
-            prepared_results.append(result)
+            prepared_results.append(prepared_result)
 
         return prepared_results
 
@@ -90,11 +91,12 @@ class BooksRepository(PostgresRepository):
             books: list of Book objects.
         """
         stmt = insert(Books)
-        stmt.on_conflict_do_update(
-            index_elements=['isbn'],
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[Books.isbn],
             set_={
                 Books.title.key: stmt.excluded.title,
                 Books.author.key: stmt.excluded.author,
+                Books.source.key: stmt.excluded.source,
                 Books.publisher_raw.key: stmt.excluded.publisher,
                 Books.publisher.key: stmt.excluded.publisher,
                 Books.url.key: stmt.excluded.url,

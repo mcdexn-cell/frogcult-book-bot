@@ -1,0 +1,20 @@
+"""
+Provide structures for users.
+"""
+
+from pydantic import (
+    BaseModel,
+    Field,
+)
+
+from src.enums.book import BookGenre
+
+
+class User(BaseModel):
+    """
+    User model class.
+    """
+    id: int
+    subscribed_genres: list[BookGenre] = Field(default_factory=list)
+    subscribed_publishers: list[str] = Field(default_factory=list)
+    subscribed_authors: list[str] = Field(default_factory=list)

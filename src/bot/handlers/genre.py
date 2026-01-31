@@ -1,0 +1,4 @@
+"""
+Provide handlers for genres.
+"""
+

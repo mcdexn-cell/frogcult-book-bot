@@ -13,6 +13,7 @@ class Book(BaseModel):
     """
     title: str
     author: str
+    source: str
     publisher_raw: str
     url: str
     status: BookStatus

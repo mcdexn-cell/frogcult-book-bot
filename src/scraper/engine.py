@@ -44,6 +44,19 @@ class PlaywrightScraperEngine:
         self._playwright = None
         self._browser: Browser | None = None
 
+    async def __aenter__(self):
+        """
+        Async context manager entry.
+        """
+        await self.start()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Async context manager exit.
+        """
+        await self.close()
+
     async def start(self):
         """
         Start the browser instance.
@@ -64,7 +77,7 @@ class PlaywrightScraperEngine:
             await self._playwright.stop()
 
     @asynccontextmanager
-    async def get_page(self) -> AsyncGenerator[Page]:
+    async def get_page(self, cookies: list[dict] | None = None) -> AsyncGenerator[Page]:
         """
         Get browser page.
 
@@ -74,6 +87,9 @@ class PlaywrightScraperEngine:
 
         context = await self._browser.new_context(viewport=self.viewport, user_agent=self.user_agent)
         context.set_default_timeout(self.timeout)
+
+        if cookies:
+            await context.add_cookies(cookies)
 
         page = await context.new_page()
 

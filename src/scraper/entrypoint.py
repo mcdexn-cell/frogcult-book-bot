@@ -10,10 +10,11 @@ from src.dependencies.database import (
 from src.repositories.books import BooksRepository
 from src.scraper.config import PUBLISHERS_CONFIG
 from src.scraper.engine import PlaywrightScraperEngine
-from src.scraper.extractors.service import PhraseExtractionService
-from src.scraper.extractors.mappings import (
+from src.utils.extractors import PhraseExtractionService
+from src.utils.extractors import (
     GENRES_MAPPING,
     GENRES_NOISE_WORDS,
+    PUBLISHERS_MAPPING,
 )
 from src.scraper.scraper import MainScraper
 
@@ -23,6 +24,7 @@ async def main():
     await engine.start()
 
     genre_extractor = PhraseExtractionService(phrases_mapping=GENRES_MAPPING, noise_words=GENRES_NOISE_WORDS)
+    publisher_extractor = PhraseExtractionService(phrases_mapping=PUBLISHERS_MAPPING)
     books_repo = BooksRepository(session=get_session())
 
     scraper = MainScraper(
@@ -30,6 +32,7 @@ async def main():
         scraper_engine=engine,
         book_scraper_params={
             'genre_extractor': genre_extractor,
+            'publisher_extractor': publisher_extractor,
         }
     )
 

@@ -61,10 +61,17 @@ class MainScraper:
                 continue
 
             if existing_book.status in STATUS_REWRITE_RULES.get(book.status, []):
+                print('Book rewrite - status supremacy', book.isbn)
                 prepared_books.append(book)
                 alerts.append(BookAlert(isbn=book.isbn, status_before=existing_book.status, status_after=book.status))
+                continue
 
-            if existing_book.genres and book.genres and existing_book.genres != book.genres:
+            if existing_book.source != existing_book.publisher and book.source == book.publisher:
+                print('Book rewrite - source supremacy', book.isbn)
+                prepared_books.append(book)
+
+            if existing_book.genres and book.genres and set(existing_book.genres) != set(book.genres):
+                print('Book update - genres', book.isbn, existing_book.genres, book.genres)
                 combined_genres = list(set(existing_book.genres + book.genres))
                 existing_book.genres = combined_genres
                 prepared_books.append(existing_book)
@@ -103,7 +110,10 @@ class MainScraper:
                 book_batch.extend(book)
 
                 if len(book_batch) >= book_batch.maxlen:
-                    await self._process_book_batch(books=book_batch, handle_alerts=handle_alerts)
+                    await self._process_book_batch(
+                        books=book_batch,
+                        handle_alerts=handle_alerts
+                    )
                     book_batch.clear()
 
             if book_batch:

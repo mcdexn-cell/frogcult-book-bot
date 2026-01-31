@@ -41,6 +41,7 @@ class Books(Base):
     url: Mapped[str] = mapped_column(String)
     title: Mapped[str] = mapped_column(String)
     author: Mapped[str] = mapped_column(String)
+    source: Mapped[str] = mapped_column(String)
     publisher: Mapped[str] = mapped_column(String, nullable=True)
     publisher_raw: Mapped[str] = mapped_column(String)
     genres: Mapped[dict] = mapped_column(JSON, nullable=True)
@@ -61,6 +62,18 @@ class BookAlerts(Base):
     status_before: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
     status_after: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Users(Base):
+    """
+    Users table.
+    """
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    subscribed_genres: Mapped[list] = mapped_column(JSON, nullable=True)
+    subscribed_publishers: Mapped[list] = mapped_column(JSON, nullable=True)
+    subscribed_authors: Mapped[list] = mapped_column(JSON, nullable=True)
 
 
 engine = create_engine('postgresql+psycopg2://test:test@127.0.0.1:5432/test')

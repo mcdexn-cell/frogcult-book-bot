@@ -67,6 +67,79 @@ class BookGenre(Enum):
     TRAVEL = "подорожі"
     COOKING = "кулінарія"
     GRAPHIC_NOVEL = "графічний роман"
+    MANGA = "манга"
+    COMICS = "комікси"
+
+
+class BookGenreCategory(StrEnum):
+    """
+    Enum for book genre category.
+    """
+
+    FANTASY_FANTASTIC = 'фантастика, фентезі'
+    DETECTIVE_THRILLER = 'детективи, трилери'
+    ROMANCE = 'романи'
+    NONFICTION = 'нон-фікшн'
+    GRAPHIC = 'графічні'
+    OTHER = 'інше'
+
+
+GENRE_TO_CATEGORY_MAP = {
+    BookGenre.FANTASY: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.SCIENCE_FICTION: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.THRILLER: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.HORROR: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.DETECTIVE: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.ACTION: BookGenreCategory.ROMANCE,
+    BookGenre.ADVENTURE: BookGenreCategory.ROMANCE,
+    BookGenre.HISTORICAL_NOVEL: BookGenreCategory.ROMANCE,
+    BookGenre.ROMANCE: BookGenreCategory.ROMANCE,
+    BookGenre.DRAMA: BookGenreCategory.ROMANCE,
+    BookGenre.COMEDY: BookGenreCategory.ROMANCE,
+    BookGenre.MYSTICISM: BookGenreCategory.ROMANCE,
+    BookGenre.FOLKLORE: BookGenreCategory.OTHER,
+    BookGenre.POETRY: BookGenreCategory.OTHER,
+    BookGenre.PROSE: BookGenreCategory.ROMANCE,
+    BookGenre.CLASSIC_LITERATURE: BookGenreCategory.ROMANCE,
+    BookGenre.CONTEMPORARY_LITERATURE: BookGenreCategory.ROMANCE,
+    BookGenre.BIOGRAPHY: BookGenreCategory.OTHER,
+    BookGenre.PSYCHOLOGICAL_PROSE: BookGenreCategory.ROMANCE,
+    BookGenre.PHILOSOPHICAL_PROSE: BookGenreCategory.ROMANCE,
+    BookGenre.SOCIAL_PROSE: BookGenreCategory.ROMANCE,
+    BookGenre.POST_APOCALYPTIC: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.DYSTOPIA: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.UTOPIA: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.CYBERPUNK: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.STEAMPUNK: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.SPACE_OPERA: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.MILITARY_FICTION: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.URBAN_FANTASY: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.EPIC_FANTASY: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.DARK_FANTASY: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.PARANORMAL_ROMANCE: BookGenreCategory.FANTASY_FANTASTIC,
+    BookGenre.SPY_NOVEL: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.POLITICAL_THRILLER: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.CRIME_NOVEL: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.NOIR: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.WESTERN: BookGenreCategory.DETECTIVE_THRILLER,
+    BookGenre.FAMILY_SAGA: BookGenreCategory.ROMANCE,
+    BookGenre.EROTICA: BookGenreCategory.ROMANCE,
+    BookGenre.YOUNG_ADULT: BookGenreCategory.ROMANCE,
+    BookGenre.CHILDREN_LITERATURE: BookGenreCategory.OTHER,
+    BookGenre.JOURNALISM: BookGenreCategory.NONFICTION,
+    BookGenre.ACADEMIC_LITERATURE: BookGenreCategory.NONFICTION,
+    BookGenre.POPULAR_SCIENCE: BookGenreCategory.NONFICTION,
+    BookGenre.SELF_HELP: BookGenreCategory.NONFICTION,
+    BookGenre.BUSINESS: BookGenreCategory.NONFICTION,
+    BookGenre.PSYCHOLOGY: BookGenreCategory.NONFICTION,
+    BookGenre.PHILOSOPHY: BookGenreCategory.NONFICTION,
+    BookGenre.RELIGION: BookGenreCategory.NONFICTION,
+    BookGenre.TRAVEL: BookGenreCategory.NONFICTION,
+    BookGenre.COOKING: BookGenreCategory.NONFICTION,
+    BookGenre.GRAPHIC_NOVEL: BookGenreCategory.GRAPHIC,
+    BookGenre.COMICS: BookGenreCategory.GRAPHIC,
+    BookGenre.MANGA: BookGenreCategory.GRAPHIC,
+}
 
 
 STATUS_REWRITE_RULES = {

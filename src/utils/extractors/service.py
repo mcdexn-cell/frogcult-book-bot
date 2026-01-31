@@ -26,7 +26,7 @@ class PhraseExtractionService:
         """
         self._similarity_threshold = similarity_threshold
         self._phrases_mapping = phrases_mapping
-        self._noise_words = noise_words
+        self._noise_words = noise_words or set()
         self._build_reverse_mapping()
 
     def _build_reverse_mapping(self) -> None:
@@ -37,6 +37,8 @@ class PhraseExtractionService:
         for keyword, variations in self._phrases_mapping.items():
             for variation in variations:
                 self._variation_to_phrase[variation.lower()] = keyword
+
+        self._variation_to_phrase = dict(sorted(self._variation_to_phrase.items(), reverse=True))
 
     def _normalize_text(self, text: str) -> str:
         """
@@ -65,29 +67,29 @@ class PhraseExtractionService:
 
         return matched_phrases + remaining_words
 
-    def _fuzzy_match(self, text: str) -> set[str]:
+    def _fuzzy_match(self, text: str) -> list[str]:
         """Find genres using fuzzy string matching."""
-        matched_phrases = set()
+        matched_phrases = []
 
         for variation, phrase in self._variation_to_phrase.items():
             similarity = SequenceMatcher(None, text, variation).ratio()
             if similarity >= self._similarity_threshold:
-                matched_phrases.add(phrase)
+                matched_phrases.append(phrase)
 
         return matched_phrases
 
-    def _exact_match(self, text: str) -> set[str]:
+    def _exact_match(self, text: str) -> list[str]:
         """Find genres using exact matching."""
-        matched_phrases = set()
+        matched_phrases = []
 
         # Check full text
         if text in self._variation_to_phrase:
-            matched_phrases.add(self._variation_to_phrase[text])
+            matched_phrases.append(self._variation_to_phrase[text])
 
         # Check if text contains any variation
         for variation, phrase in self._variation_to_phrase.items():
             if variation in text:
-                matched_phrases.add(phrase)
+                matched_phrases.append(phrase)
 
         return matched_phrases
 
@@ -119,4 +121,4 @@ class PhraseExtractionService:
             for phrase in phrases:
                 matches.update(self._fuzzy_match(phrase))
 
-        return sorted(list(matches), key=lambda g: g.value)
+        return list(matches)

@@ -5,7 +5,7 @@ from asyncio import Semaphore
 
 from src.scraper.book.base import BaseBookScraper
 from src.scraper.engine import PlaywrightScraperEngine
-from src.scraper.extractors.service import PhraseExtractionService
+from src.utils.extractors import PhraseExtractionService
 
 
 class BookScraperFactory:
@@ -21,6 +21,7 @@ class BookScraperFactory:
         *,
         scraper_engine: PlaywrightScraperEngine,
         genre_extractor: PhraseExtractionService,
+        publisher_extractor: PhraseExtractionService,
         semaphore: Semaphore | None = None,
     ) -> BaseBookScraper:
         """
@@ -28,4 +29,9 @@ class BookScraperFactory:
         """
         book_scraper_class = cls.publisher_name_to_scraper_map.get(publisher_name, BaseBookScraper)
 
-        return book_scraper_class(scraper_engine=scraper_engine, genre_extractor=genre_extractor, semaphore=semaphore)
+        return book_scraper_class(
+            scraper_engine=scraper_engine,
+            genre_extractor=genre_extractor,
+            publisher_extractor=publisher_extractor,
+            semaphore=semaphore,
+        )
