@@ -5,6 +5,7 @@ Provide structures for users.
 from pydantic import (
     BaseModel,
     Field,
+    field_validator,
 )
 
 from src.enums.book import BookGenre

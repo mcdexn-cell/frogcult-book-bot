@@ -7,6 +7,7 @@ from aiogram import (
     Dispatcher,
 )
 from src.bot.handlers.main import router as main_router
+from src.bot.handlers.publisher import router as publisher_router
 from src.settings import settings
 
 
@@ -15,6 +16,7 @@ dp = Dispatcher()
 
 dp.include_routers(
     main_router,
+    publisher_router,
 )
 
 

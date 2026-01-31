@@ -2,7 +2,10 @@
 Provide users repository implementation.
 """
 
-from sqlalchemy import select
+from sqlalchemy import (
+    select,
+    update,
+)
 from sqlalchemy.dialects.postgresql import insert
 
 from src.external_services.database.models import Users
@@ -26,6 +29,7 @@ class UsersRepository(PostgresRepository):
             stmt = insert(Users).values(id=user_id)
             stmt = stmt.on_conflict_do_nothing(index_elements=[Users.id])
             await session.execute(stmt)
+            await session.commit()
 
     async def get_user_by_id(self, user_id: int) -> User | None:
         """
@@ -46,7 +50,29 @@ class UsersRepository(PostgresRepository):
 
         return User(
             id=user.id,
-            subscribed_genres=user.subscribed_genres,
-            subscribed_publishers=user.subscribed_publishers,
-            subscribed_authors=user.subscribed_authors,
+            subscribed_genres=user.subscribed_genres or [],
+            subscribed_publishers=user.subscribed_publishers or [],
+            subscribed_authors=user.subscribed_authors or [],
         )
+
+    async def toggle_publisher_subscription(self, user_id: int, publisher: str, is_subscribed: bool) -> None:
+        """
+        Toggle publisher subscription in database.
+
+        Args:
+            user_id: user ID to toggle.
+            publisher: publisher name to toggle.
+            is_subscribed: is user already subscribed to the publisher.
+        """
+        user_data = await self.get_user_by_id(user_id)
+
+        if is_subscribed:
+            user_data.subscribed_publishers.remove(publisher)
+
+        else:
+            user_data.subscribed_publishers.append(publisher)
+
+        stmt = update(Users).where(Users.id == user_id).values(subscribed_publishers=user_data.subscribed_publishers)
+        async with self._session() as session:
+            await session.execute(stmt)
+            await session.commit()

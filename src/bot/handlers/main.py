@@ -8,8 +8,9 @@ from aiogram import (
     types,
 )
 from aiogram.filters import Command
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.fsm.context import FSMContext
 
+from src.bot.builders.keyboard import get_menu_markup
 from src.bot.service import BookBotService
 
 
@@ -30,21 +31,26 @@ async def start(message: types.Message, service: BookBotService):
 
 
 @router.message(Command('menu'))
-async def menu(message: types.Message, service: BookBotService):
+async def menu(message: types.Message):
     """
     Show the menu.
     """
-    builder = InlineKeyboardBuilder()
-    builder.button(text='🏢 Видавництва', callback_data='publishers_callback')
-    builder.button(text='🎭 Жанри', callback_data='genres_callback')
-    builder.button(text='👤 Автори', callback_data='authors_callback')
-    builder.button(text='➜] Вихід', callback_data='menu_exit')
-    builder.adjust(2)
 
     await message.answer(
         'Ви можете підписатися на нові книги за наступними категоріями:',
-        reply_markup=builder.as_markup(),
+        reply_markup=get_menu_markup(),
     )
+
+
+@router.callback_query(F.data == "menu")
+async def back_to_menu(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Show the menu.
+    """
+    await state.clear()
+    await callback.message.edit_text('Ви можете підписатися на нові книги за наступними категоріями:')
+    await callback.message.edit_reply_markup(reply_markup=get_menu_markup())
+    await callback.answer()
 
 
 @router.callback_query(F.data == "menu_exit")
