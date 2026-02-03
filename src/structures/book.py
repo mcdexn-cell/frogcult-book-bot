@@ -14,13 +14,14 @@ class Book(BaseModel):
     title: str
     author: str
     source: str
-    publisher_raw: str
+    publisher: str
     url: str
     status: BookStatus
     isbn: int
     genres_raw: list[str]
-    publisher: str | None = None
+    publisher_id: int | None = None
     genres: list[BookGenre] | None = None
+    genre_ids: list[int] | None = None
 
 
 class BookAlert(BaseModel):

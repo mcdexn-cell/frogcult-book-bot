@@ -42,10 +42,9 @@ class Books(Base):
     title: Mapped[str] = mapped_column(String)
     author: Mapped[str] = mapped_column(String)
     source: Mapped[str] = mapped_column(String)
-    publisher: Mapped[str] = mapped_column(String, nullable=True)
-    publisher_raw: Mapped[str] = mapped_column(String)
+    publisher_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    publisher: Mapped[str] = mapped_column(String)
     genres: Mapped[dict] = mapped_column(JSON, nullable=True)
-    genres_raw: Mapped[dict] = mapped_column(JSON)
     status: Mapped[BookStatus] = mapped_column(Enum(BookStatus))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.utcnow, nullable=True)
@@ -74,6 +73,40 @@ class Users(Base):
     subscribed_genres: Mapped[list] = mapped_column(JSON, nullable=True)
     subscribed_publishers: Mapped[list] = mapped_column(JSON, nullable=True)
     subscribed_authors: Mapped[list] = mapped_column(JSON, nullable=True)
+
+
+class Publishers(Base):
+    """
+    Publishers table.
+    """
+    __tablename__ = "publishers"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    mapping: Mapped[dict] = mapped_column(JSON)
+
+
+class Genres(Base):
+    """
+    Genres table.
+    """
+    __tablename__ = "genres"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    category: Mapped[str] = mapped_column(String)
+    mapping: Mapped[dict] = mapped_column(JSON)
+
+
+class BookGenres(Base):
+    """
+    Book genres table.
+    """
+    __tablename__ = "book_genres"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    book_isbn: Mapped[int] = mapped_column(BigInteger, ForeignKey(Books.isbn))
+    genre_id: Mapped[int] = mapped_column(BigInteger, ForeignKey(Genres.id))
 
 
 engine = create_engine('postgresql+psycopg2://test:test@127.0.0.1:5432/test')

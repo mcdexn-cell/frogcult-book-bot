@@ -3,6 +3,9 @@ Provide keyword extraction service implementation.
 """
 import re
 from difflib import SequenceMatcher
+from typing import TypeVar
+
+T = TypeVar('T')
 
 
 class PhraseExtractionService:
@@ -12,7 +15,7 @@ class PhraseExtractionService:
 
     def __init__(
             self,
-            phrases_mapping: dict[str, list[str]],
+            phrases_mapping: dict[T, list[str]],
             noise_words: list | set | None = None,
             similarity_threshold: float = 0.75,
     ):
@@ -67,7 +70,7 @@ class PhraseExtractionService:
 
         return matched_phrases + remaining_words
 
-    def _fuzzy_match(self, text: str) -> list[str]:
+    def _fuzzy_match(self, text: str) -> list[T]:
         """Find genres using fuzzy string matching."""
         matched_phrases = []
 
@@ -78,7 +81,7 @@ class PhraseExtractionService:
 
         return matched_phrases
 
-    def _exact_match(self, text: str) -> list[str]:
+    def _exact_match(self, text: str) -> list[T]:
         """Find genres using exact matching."""
         matched_phrases = []
 
@@ -93,16 +96,16 @@ class PhraseExtractionService:
 
         return matched_phrases
 
-    def extract_phrases(self, text: str, use_fuzzy: bool = True) -> list[str]:
+    def extract_phrases(self, text: str, use_fuzzy: bool = True) -> list[T]:
         """
-        Extract genres from a single text string.
+        Extract phrases from a single text string.
 
         Args:
-            text: Input text containing genre information
-            use_fuzzy: Whether to use fuzzy matching in addition to exact matching
+            text: input text with phrase.
+            use_fuzzy: whether to use fuzzy matching in addition to exact matching
 
         Returns:
-            List of UkrainianGenre enums
+            List of extracted phrases
         """
         normalized = self._normalize_text(text)
         matches = set()

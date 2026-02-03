@@ -5,7 +5,7 @@ Provide implementation of books repository.
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from src.external_services.database.models import Books
+from src.database.models import Books, BookGenres
 from src.repositories.base import PostgresRepository
 from src.repositories.errors import IsbnBatchIsTooBigError
 from src.structures.book import Book
@@ -97,14 +97,15 @@ class BooksRepository(PostgresRepository):
                 Books.title.key: stmt.excluded.title,
                 Books.author.key: stmt.excluded.author,
                 Books.source.key: stmt.excluded.source,
-                Books.publisher_raw.key: stmt.excluded.publisher,
+                Books.publisher_id.key: stmt.excluded.publisher,
                 Books.publisher.key: stmt.excluded.publisher,
                 Books.url.key: stmt.excluded.url,
                 Books.status.key: stmt.excluded.status,
                 Books.genres.key: stmt.excluded.genres,
-                Books.genres_raw.key: stmt.excluded.genres_raw,
             }
         )
+        genres_stmt = insert(BookGenres)
+        genres_stmt = genres_stmt.on_conflict_do_nothing()
         async with self._session() as session:
             await session.execute(stmt, [book.model_dump(mode='json') for book in books])
             await session.commit()

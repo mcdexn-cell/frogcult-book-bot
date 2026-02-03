@@ -5,7 +5,7 @@ from asyncio import Semaphore
 
 from src.scraper.book.base import BaseBookScraper
 from src.scraper.engine import PlaywrightScraperEngine
-from src.utils.extractors import PhraseExtractionService
+from src.utils.extractors.service import PhraseExtractionService
 
 
 class BookScraperFactory:

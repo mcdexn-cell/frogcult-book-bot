@@ -8,7 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import insert
 
-from src.external_services.database.models import Users
+from src.database.models import Users
 from src.repositories.base import PostgresRepository
 from src.structures.users import User
 

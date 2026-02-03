@@ -5,7 +5,7 @@ import asyncio
 
 from src.enums.book import BookStatus
 from src.scraper.engine import PlaywrightScraperEngine
-from src.utils.extractors import PhraseExtractionService
+from src.utils.extractors.service import PhraseExtractionService
 from src.scraper.utils import parse_config
 from src.structures.book import Book
 from src.structures.scraper import ParserFieldConfig
@@ -54,19 +54,19 @@ class BaseBookScraper:
                     if field not in parsed_results:
                         return None
 
-                publisher_raw = parsed_results.get('publisher', publisher_name)
-                publisher = self._publisher_extractor.extract_phrases(publisher_raw)
+                publisher = parsed_results.get('publisher', publisher_name)
+                publisher_ids = self._publisher_extractor.extract_phrases(publisher)
 
                 result = Book(
                     url=url,
                     title=parsed_results['title'],
                     author=parsed_results['author'],
                     source=publisher_name,
-                    publisher=publisher[0] if publisher else None,
-                    publisher_raw=publisher_raw,
+                    publisher=publisher,
+                    publisher_id=publisher_ids[0] if publisher_ids else None,
                     status=BookStatus(parsed_results.get('status', incoming_status)),
                     isbn=self._normalize_isbn(isbn=parsed_results['isbn']),
-                    genres=self._extract_genres(parsed_results['genres'].split(',')),
+                    genre_ids=self._extract_genres(parsed_results['genres'].split(',')),
                     genres_raw=parsed_results['genres'].split(','),
                 )
 
@@ -79,7 +79,7 @@ class BaseBookScraper:
         """
         return int(isbn.replace('-', ''))
 
-    def _extract_genres(self, parsed_genres: list[str]) -> list[str]:
+    def _extract_genres(self, parsed_genres: list[str]) -> list[int]:
         """
         Extract genres from parsed.
         """
