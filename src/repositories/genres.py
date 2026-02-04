@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.database.models import Genres
 from src.repositories.base import PostgresRepository
-from src.structures.genres import GenreInDb
+from src.structures.genre import GenreInDb
 
 
 class GenresRepository(PostgresRepository):

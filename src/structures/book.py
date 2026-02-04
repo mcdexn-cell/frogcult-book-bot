@@ -31,3 +31,11 @@ class BookAlert(BaseModel):
     isbn: int
     status_before: BookStatus | None = None
     status_after: BookStatus | None = None
+
+
+class BookGenresRecord(BaseModel):
+    """
+    Book genres structure class.
+    """
+    book_isbn: int
+    genre_id: int

@@ -5,7 +5,7 @@ import asyncio
 
 from src.dependencies.database import get_engine
 from src.dependencies.repositories import get_publishers_repository
-from src.structures.publishers import PublisherInDb
+from src.structures.publisher import PublisherInDb
 from src.utils.extractors.mappings import PUBLISHERS_MAPPING
 
 

@@ -14,12 +14,14 @@ from sqlalchemy import (
     Integer,
     JSON,
     String,
+    Table,
     UniqueConstraint,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     mapped_column,
+    relationship,
 )
 
 from src.enums.book import BookStatus
@@ -29,6 +31,13 @@ class Base(DeclarativeBase):
     """
     Abstract table declarative base class.
     """
+
+books_genres = Table(
+    "books_genres",
+    Base.metadata,
+    Column("book_isbn", ForeignKey('books.isbn'), primary_key=True),
+    Column("genre_id", ForeignKey('genres.id'), primary_key=True),
+)
 
 
 class Books(Base):
@@ -44,10 +53,12 @@ class Books(Base):
     source: Mapped[str] = mapped_column(String)
     publisher_id: Mapped[int] = mapped_column(Integer, nullable=True)
     publisher: Mapped[str] = mapped_column(String)
-    genres: Mapped[dict] = mapped_column(JSON, nullable=True)
+    genres_raw: Mapped[dict] = mapped_column(JSON, nullable=True)
     status: Mapped[BookStatus] = mapped_column(Enum(BookStatus))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.utcnow, nullable=True)
+
+    genres = relationship("Genres", secondary=books_genres, back_populates="books")
 
 
 class BookAlerts(Base):
@@ -97,16 +108,8 @@ class Genres(Base):
     category: Mapped[str] = mapped_column(String)
     mapping: Mapped[dict] = mapped_column(JSON)
 
+    books = relationship("Books", secondary=books_genres, back_populates="genres")
 
-class BookGenres(Base):
-    """
-    Book genres table.
-    """
-    __tablename__ = "book_genres"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    book_isbn: Mapped[int] = mapped_column(BigInteger, ForeignKey(Books.isbn))
-    genre_id: Mapped[int] = mapped_column(BigInteger, ForeignKey(Genres.id))
 
 
 engine = create_engine('postgresql+psycopg2://test:test@127.0.0.1:5432/test')

@@ -3,13 +3,20 @@ Provide implementation of books repository.
 """
 
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.dialects.postgresql import insert
 
-from src.database.models import Books, BookGenres
+from src.database.models import (
+    Books,
+    Genres,
+    books_genres,
+)
 from src.repositories.base import PostgresRepository
 from src.repositories.errors import IsbnBatchIsTooBigError
-from src.structures.book import Book
-
+from src.structures.book import (
+    Book,
+    BookGenresRecord,
+)
 
 MAX_ISBN_RESULTS = 100
 
@@ -30,8 +37,8 @@ class BooksRepository(PostgresRepository):
             Book object.
         """
         async with self._session() as session:
-            query = select(Books).where(Books.isbn == isbn)
-            result = (await session.execute(query)).one_or_none()
+            query = select(Books).options(joinedload(Books.genres)).where(Books.isbn == isbn)
+            result = (await session.execute(query)).unique().one_or_none()
 
         if not result:
             return None
@@ -43,9 +50,10 @@ class BooksRepository(PostgresRepository):
             genres=result.genres,
             genres_raw=result.genres_raw,
             publisher=result.publisher,
-            publisher_raw=result.publisher_raw,
+            publisher_id=result.publisher_id,
             url=result.url,
             status=result.status,
+            source=result.source,
         )
 
     async def get_by_isbn_batch(self, isbn_batch: list[int]) -> list[Book] | None:
@@ -62,8 +70,10 @@ class BooksRepository(PostgresRepository):
             raise IsbnBatchIsTooBigError
 
         async with self._session() as session:
-            query = select(Books).where(Books.isbn.in_(isbn_batch))
-            results = (await session.execute(query)).scalars().all()
+            query = (
+                select(Books).options(joinedload(Books.genres)).where(Books.isbn.in_(isbn_batch))
+            )
+            results = (await session.execute(query)).unique().scalars().all()
 
         prepared_results = []
         for result in results:
@@ -72,10 +82,11 @@ class BooksRepository(PostgresRepository):
                 author=result.author,
                 isbn=result.isbn,
                 source=result.source,
-                genres=result.genres,
+                genres=[genre.name for genre in result.genres],
+                genre_ids=[genre.id for genre in result.genres],
                 genres_raw=result.genres_raw,
                 publisher=result.publisher,
-                publisher_raw=result.publisher_raw,
+                publisher_id=result.publisher_id,
                 url=result.url,
                 status=result.status,
             )
@@ -97,15 +108,38 @@ class BooksRepository(PostgresRepository):
                 Books.title.key: stmt.excluded.title,
                 Books.author.key: stmt.excluded.author,
                 Books.source.key: stmt.excluded.source,
-                Books.publisher_id.key: stmt.excluded.publisher,
+                Books.publisher_id.key: stmt.excluded.publisher_id,
                 Books.publisher.key: stmt.excluded.publisher,
                 Books.url.key: stmt.excluded.url,
                 Books.status.key: stmt.excluded.status,
-                Books.genres.key: stmt.excluded.genres,
+                Books.genres_raw.key: stmt.excluded.genres_raw,
             }
         )
-        genres_stmt = insert(BookGenres)
-        genres_stmt = genres_stmt.on_conflict_do_nothing()
         async with self._session() as session:
             await session.execute(stmt, [book.model_dump(mode='json') for book in books])
+            await session.commit()
+
+        book_genres_records: list[BookGenresRecord] = []
+        for book in books:
+            if not book.genre_ids:
+                continue
+
+            for genre_id in book.genre_ids:
+                book_genres_records.append(BookGenresRecord(book_isbn=book.isbn, genre_id=genre_id))
+
+        if book_genres_records:
+            await self.upsert_book_genres_batch(book_genres=book_genres_records)
+
+    async def upsert_book_genres_batch(self, book_genres: list[BookGenresRecord]) -> None:
+        """
+        Upsert book genres batch.
+
+        Args:
+            book_genres: list of BookGenresRecord objects.
+        """
+        stmt = insert(books_genres)
+        stmt = stmt.on_conflict_do_nothing()
+
+        async with self._session() as session:
+            await session.execute(stmt, [record.model_dump(mode='json') for record in book_genres])
             await session.commit()

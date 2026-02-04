@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.database.models import Publishers
 from src.repositories.base import PostgresRepository
-from src.structures.publishers import PublisherInDb
+from src.structures.publisher import PublisherInDb
 
 
 class PublishersRepository(PostgresRepository):

@@ -50,6 +50,7 @@ class MainScraper:
         alerts = []
 
         existing_books = await self._books_repository.get_by_isbn_batch(isbn_batch=[book.isbn for book in books])
+        print(existing_books)
         existing_books_by_isbn = {book.isbn: book for book in existing_books}
 
         prepared_books = []

@@ -8,7 +8,7 @@ from src.dependencies.repositories import get_genres_repository
 from src.enums.book import (
     GENRE_TO_CATEGORY_MAP,
 )
-from src.structures.genres import GenreInDb
+from src.structures.genre import GenreInDb
 from src.utils.extractors.mappings import GENRES_MAPPING
 
 
