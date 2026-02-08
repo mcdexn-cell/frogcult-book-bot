@@ -24,7 +24,11 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from src.enums.book import BookStatus
+from src.enums.book import (
+    BookStatus,
+    BookGenre,
+    BookGenreCategory,
+)
 
 
 class Base(DeclarativeBase):
@@ -104,9 +108,9 @@ class Genres(Base):
     __tablename__ = "genres"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    name: Mapped[str] = mapped_column(String)
-    category: Mapped[str] = mapped_column(String)
-    mapping: Mapped[dict] = mapped_column(JSON)
+    name: Mapped[BookGenre] = mapped_column(String)
+    category: Mapped[BookGenreCategory] = mapped_column(String)
+    mapping: Mapped[list] = mapped_column(JSON)
 
     books = relationship("Books", secondary=books_genres, back_populates="genres")
 

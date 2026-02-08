@@ -76,3 +76,25 @@ class UsersRepository(PostgresRepository):
         async with self._session() as session:
             await session.execute(stmt)
             await session.commit()
+
+    async def toggle_genre_subscription(self, user_id: int, genre_id: int, is_subscribed: bool) -> None:
+        """
+        Toggle genre subscription in database.
+
+        Args:
+            user_id: user ID to toggle.
+            genre_id: genre ID to toggle.
+            is_subscribed: is user already subscribed to the genre.
+        """
+        user_data = await self.get_user_by_id(user_id)
+
+        if is_subscribed:
+            user_data.subscribed_genres.remove(genre_id)
+
+        else:
+            user_data.subscribed_genres.append(genre_id)
+
+        stmt = update(Users).where(Users.id == user_id).values(subscribed_genres=user_data.subscribed_genres)
+        async with self._session() as session:
+            await session.execute(stmt)
+            await session.commit()

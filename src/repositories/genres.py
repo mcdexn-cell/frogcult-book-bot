@@ -29,6 +29,22 @@ class GenresRepository(PostgresRepository):
             await session.execute(stmt, [genre.model_dump(mode='json') for genre in genres])
             await session.commit()
 
+    async def get_all_genres_data(self) -> list[GenreInDb]:
+        """
+        Get all genres data.
+
+        Returns:
+            list of genres data.
+        """
+        stmt = select(Genres)
+        async with self._session() as session:
+            results = (await session.execute(stmt)).scalars().all()
+
+            return [
+                GenreInDb(id=result.id, name=result.name, category=result.category, mapping=result.mapping)
+                for result in results
+            ]
+
     async def get_genre_id_to_mapping(self) -> dict[int, list[str]]:
         """
         Get genres id to publisher mapping.

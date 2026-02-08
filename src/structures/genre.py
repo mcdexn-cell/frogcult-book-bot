@@ -18,7 +18,8 @@ class GenreUserContext:
     """
     Genre User context struct.
     """
-    genre: BookGenre
+    id: int
+    name: BookGenre
     category: BookGenreCategory
     is_subscribed: bool
 

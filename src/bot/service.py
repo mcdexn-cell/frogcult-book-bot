@@ -2,11 +2,11 @@
 Provide bot service implementation.
 """
 
-from src.enums.book import GENRE_TO_CATEGORY_MAP
+from src.repositories.genres import GenresRepository
 from src.repositories.publishers import PublishersRepository
 from src.repositories.users import UsersRepository
 from src.structures.genre import GenreUserContext
-from src.structures.publisher import PublisherUserContext, PublisherInDb
+from src.structures.publisher import PublisherUserContext
 from src.utils.extractors.service import PhraseExtractionService
 
 
@@ -17,6 +17,7 @@ class BookBotService:
     def __init__(
             self,
             users_repository: UsersRepository,
+            genres_repository: GenresRepository,
             publisher_extractor: PhraseExtractionService,
             publishers_repository: PublishersRepository,
     ) -> None:
@@ -27,6 +28,7 @@ class BookBotService:
             users_repository: users repository instance.
         """
         self._users_repository = users_repository
+        self._genres_repository = genres_repository
         self._publisher_extractor = publisher_extractor
         self._publishers_repository = publishers_repository
 
@@ -50,17 +52,17 @@ class BookBotService:
             list of genres.
         """
         user_data = await self._users_repository.get_user_by_id(user_id=user_id)
+        genres_data = await self._genres_repository.get_all_genres_data()
 
-        prepared_genres: list[GenreUserContext] = []
-        for genre, category in GENRE_TO_CATEGORY_MAP.items():
-            prepared_genre = GenreUserContext(
-                genre=genre,
-                category=category,
-                is_subscribed=genre in user_data.subscribed_genres,
+        return [
+            GenreUserContext(
+                id=genre_data.id,
+                name=genre_data.name,
+                category=genre_data.category,
+                is_subscribed=genre_data.id in user_data.subscribed_genres,
             )
-            prepared_genres.append(prepared_genre)
-
-        return prepared_genres
+            for genre_data in genres_data
+        ]
 
     async def search_publishers_for_user(self, user_id: int, input_text: str) -> list[PublisherUserContext]:
         """
@@ -78,17 +80,14 @@ class BookBotService:
 
         publishers_data = await self._publishers_repository.get_publishers_by_ids(ids=matched_publisher_ids)
 
-        prepared_publishers: list[PublisherUserContext] = []
-        for publisher in publishers_data:
-            is_subscribed = publisher.id in set(user_data.subscribed_publishers)
-            publisher_data = PublisherUserContext(
+        return [
+            PublisherUserContext(
                 id=publisher.id,
                 name=publisher.name,
-                is_subscribed=is_subscribed,
+                is_subscribed=publisher.id in user_data.subscribed_publishers,
             )
-            prepared_publishers.append(publisher_data)
-
-        return prepared_publishers
+            for publisher in publishers_data
+        ]
 
     async def toggle_publisher_subscription(self, user_id: int, publisher_id: int, is_subscribed: bool) -> None:
         """
@@ -102,5 +101,20 @@ class BookBotService:
         await self._users_repository.toggle_publisher_subscription(
             user_id=user_id,
             publisher_id=publisher_id,
+            is_subscribed=is_subscribed,
+        )
+
+    async def toggle_genre_subscription(self, user_id: int, genre_id: int, is_subscribed: bool) -> None:
+        """
+        Toggle genre subscription in database.
+
+        Args:
+            user_id: user ID to toggle.
+            genre_id: genre ID to toggle.
+            is_subscribed: is user already subscribed to the genre.
+        """
+        await self._users_repository.toggle_genre_subscription(
+            user_id=user_id,
+            genre_id=genre_id,
             is_subscribed=is_subscribed,
         )
