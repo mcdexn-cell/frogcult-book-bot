@@ -16,6 +16,6 @@ class User(BaseModel):
     User model class.
     """
     id: int
-    subscribed_genres: list[BookGenre] = Field(default_factory=list)
-    subscribed_publishers: list[str] = Field(default_factory=list)
+    subscribed_genres: list[int] = Field(default_factory=list)
+    subscribed_publishers: list[int] = Field(default_factory=list)
     subscribed_authors: list[str] = Field(default_factory=list)

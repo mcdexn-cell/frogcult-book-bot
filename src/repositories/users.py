@@ -55,22 +55,22 @@ class UsersRepository(PostgresRepository):
             subscribed_authors=user.subscribed_authors or [],
         )
 
-    async def toggle_publisher_subscription(self, user_id: int, publisher: str, is_subscribed: bool) -> None:
+    async def toggle_publisher_subscription(self, user_id: int, publisher_id: int, is_subscribed: bool) -> None:
         """
         Toggle publisher subscription in database.
 
         Args:
             user_id: user ID to toggle.
-            publisher: publisher name to toggle.
+            publisher_id: publisher ID to toggle.
             is_subscribed: is user already subscribed to the publisher.
         """
         user_data = await self.get_user_by_id(user_id)
 
         if is_subscribed:
-            user_data.subscribed_publishers.remove(publisher)
+            user_data.subscribed_publishers.remove(publisher_id)
 
         else:
-            user_data.subscribed_publishers.append(publisher)
+            user_data.subscribed_publishers.append(publisher_id)
 
         stmt = update(Users).where(Users.id == user_id).values(subscribed_publishers=user_data.subscribed_publishers)
         async with self._session() as session:

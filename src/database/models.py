@@ -94,7 +94,7 @@ class Publishers(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(String)
-    mapping: Mapped[dict] = mapped_column(JSON)
+    mapping: Mapped[list] = mapped_column(JSON)
 
 
 class Genres(Base):

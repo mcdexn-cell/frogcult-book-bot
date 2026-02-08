@@ -29,6 +29,25 @@ class PublishersRepository(PostgresRepository):
             await session.execute(stmt, [publisher.model_dump(mode='json') for publisher in publishers])
             await session.commit()
 
+    async def get_publishers_by_ids(self, ids: list[int]) -> list[PublisherInDb]:
+        """
+        Get publishers data by ids.
+
+        Args:
+            ids: list of publisher ids.
+
+        Returns:
+            list of publishers data.
+        """
+        stmt = select(Publishers).where(Publishers.id.in_(ids))
+        async with self._session() as session:
+            results = (await session.execute(stmt)).scalars().all()
+
+            return [
+                PublisherInDb(id=result.id, name=result.name, mapping=result.mapping)
+                for result in results
+            ]
+
     async def get_publisher_id_to_mapping(self) -> dict[int, list[str]]:
         """
         Get publisher id to publisher mapping.

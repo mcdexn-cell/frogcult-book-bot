@@ -14,7 +14,7 @@ bot = get_bot()
 
 
 async def main():
-    service = get_book_bot_service()
+    service = await get_book_bot_service()
     await dp.start_polling(bot, service=service)
 
 

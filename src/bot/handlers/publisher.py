@@ -10,7 +10,7 @@ from aiogram import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.bot.builders.keyboard import get_back_to_menu_markup
+from src.bot.markup.menu import get_back_to_menu_markup
 from src.bot.callback.publisher import TogglePublisherSubscriptionCallback
 from src.bot.constants import IS_SUBSCRIBED_EMOJI_MAP
 from src.bot.fsm.publisher import SearchPublisherForm
@@ -50,9 +50,9 @@ async def process_user_publisher(message: types.Message, state: FSMContext, serv
         for publisher in publishers:
             emoji = IS_SUBSCRIBED_EMOJI_MAP[publisher.is_subscribed]
             builder.button(
-                text=f'{emoji} {publisher.publisher}',
+                text=f'{emoji} {publisher.name}',
                 callback_data=TogglePublisherSubscriptionCallback(
-                    publisher=publisher.publisher,
+                    id=publisher.id,
                     is_subscribed=publisher.is_subscribed
                 )
             )
@@ -78,9 +78,8 @@ async def toggle_publisher_subscription(
     await service.toggle_publisher_subscription(
         user_id=query.from_user.id,
         is_subscribed=callback_data.is_subscribed,
-        publisher=callback_data.publisher,
+        publisher_id=callback_data.id,
     )
-
 
     await query.message.edit_text(text='Підписка успішна!')
     await query.message.edit_reply_markup(reply_markup=get_back_to_menu_markup())

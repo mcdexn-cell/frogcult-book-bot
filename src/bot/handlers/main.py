@@ -10,7 +10,7 @@ from aiogram import (
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from src.bot.builders.keyboard import get_menu_markup
+from src.bot.markup.menu import get_menu_markup
 from src.bot.service import BookBotService
 
 

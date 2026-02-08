@@ -1,5 +1,5 @@
 """
-Provide keyboard builders.
+Provide keyboard markup.
 """
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder

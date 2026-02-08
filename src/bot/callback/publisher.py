@@ -9,5 +9,5 @@ class TogglePublisherSubscriptionCallback(CallbackData, prefix='publisher'):
     """
     Toggle publisher subscription callback.
     """
-    publisher: str
+    id: int
     is_subscribed: bool

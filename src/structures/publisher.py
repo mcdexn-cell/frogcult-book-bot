@@ -13,7 +13,8 @@ class PublisherUserContext:
     """
     Publisher User context struct.
     """
-    publisher: str
+    id: int
+    name: str
     is_subscribed: bool
 
 
