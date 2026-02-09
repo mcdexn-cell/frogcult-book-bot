@@ -57,7 +57,7 @@ class Books(Base):
     source: Mapped[str] = mapped_column(String)
     publisher_id: Mapped[int] = mapped_column(Integer, nullable=True)
     publisher: Mapped[str] = mapped_column(String)
-    genres_raw: Mapped[dict] = mapped_column(JSON, nullable=True)
+    genres_raw: Mapped[list] = mapped_column(JSON, nullable=True)
     status: Mapped[BookStatus] = mapped_column(Enum(BookStatus))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.utcnow, nullable=True)

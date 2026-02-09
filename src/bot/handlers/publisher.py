@@ -81,5 +81,5 @@ async def toggle_publisher_subscription(
         publisher_id=callback_data.id,
     )
 
-    await query.message.edit_text(text='Підписка успішна!')
+    await query.message.edit_text(text='Статус підписки оновлено успішно.')
     await query.message.edit_reply_markup(reply_markup=get_back_to_menu_markup())

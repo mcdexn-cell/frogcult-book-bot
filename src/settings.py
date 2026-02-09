@@ -22,5 +22,7 @@ class Settings(BaseSettings):
     postgres_url: str
     bot_token: str
 
+    max_subscribed_authors: int = 20
+
 
 settings = Settings()

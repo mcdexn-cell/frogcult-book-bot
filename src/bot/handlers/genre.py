@@ -78,7 +78,7 @@ async def toggle_genre_subscription_callback(
         is_subscribed=callback_data.is_subscribed,
     )
     await callback.message.edit_text(
-        text=f'Підписка успішна.',
+        text='Статус підписки оновлено успішно.',
         reply_markup=get_back_to_menu_markup(),
     )
     await callback.answer()

@@ -4,7 +4,10 @@ Provide markup for genres.
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.bot.callback.genre import GenreCategoryCallback, ToggleGenreSubscriptionCallback
+from src.bot.callback.genre import (
+    GenreCategoryCallback,
+    ToggleGenreSubscriptionCallback,
+)
 from src.bot.constants import IS_SUBSCRIBED_EMOJI_MAP
 from src.enums.book import BookGenreCategory
 from src.structures.genre import GenreUserContext

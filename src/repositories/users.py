@@ -10,7 +10,9 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.database.models import Users
 from src.repositories.base import PostgresRepository
+from src.exceptions.users import AuthorSubscriptionLimitReachedError
 from src.structures.users import User
+from src.settings import settings
 
 
 class UsersRepository(PostgresRepository):
@@ -95,6 +97,31 @@ class UsersRepository(PostgresRepository):
             user_data.subscribed_genres.append(genre_id)
 
         stmt = update(Users).where(Users.id == user_id).values(subscribed_genres=user_data.subscribed_genres)
+        async with self._session() as session:
+            await session.execute(stmt)
+            await session.commit()
+
+    async def toggle_author_subscription(self, user_id: int, author: str, is_subscribed: bool) -> None:
+        """
+        Toggle author subscription in database.
+
+        Args:
+            user_id: user ID to toggle.
+            author: author to toggle.
+            is_subscribed: is user already subscribed to author.
+        """
+        user_data = await self.get_user_by_id(user_id)
+
+        if is_subscribed:
+            user_data.subscribed_authors.remove(author)
+
+        else:
+            user_data.subscribed_authors.append(author)
+
+        if len(user_data.subscribed_authors) > settings.max_subscribed_authors:
+            raise AuthorSubscriptionLimitReachedError
+
+        stmt = update(Users).where(Users.id == user_id).values(subscribed_authors=user_data.subscribed_authors)
         async with self._session() as session:
             await session.execute(stmt)
             await session.commit()

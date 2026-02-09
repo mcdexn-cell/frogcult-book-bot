@@ -6,6 +6,7 @@ from aiogram import (
     Bot,
     Dispatcher,
 )
+from src.bot.handlers.author import router as author_router
 from src.bot.handlers.genre import router as genre_router
 from src.bot.handlers.main import router as main_router
 from src.bot.handlers.publisher import router as publisher_router
@@ -16,6 +17,7 @@ bot = Bot(token=settings.bot_token)
 dp = Dispatcher()
 
 dp.include_routers(
+    author_router,
     genre_router,
     main_router,
     publisher_router,

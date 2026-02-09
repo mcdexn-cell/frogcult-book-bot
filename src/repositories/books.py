@@ -2,13 +2,15 @@
 Provide implementation of books repository.
 """
 
-from sqlalchemy import select
+from sqlalchemy import (
+    func,
+    select,
+)
 from sqlalchemy.orm import joinedload
 from sqlalchemy.dialects.postgresql import insert
 
 from src.database.models import (
     Books,
-    Genres,
     books_genres,
 )
 from src.repositories.base import PostgresRepository
@@ -18,7 +20,7 @@ from src.structures.book import (
     BookGenresRecord,
 )
 
-MAX_ISBN_RESULTS = 100
+MAX_SELECT_RESULTS = 100
 
 
 class BooksRepository(PostgresRepository):
@@ -66,7 +68,7 @@ class BooksRepository(PostgresRepository):
         Returns:
             list of Book objects.
         """
-        if len(isbn_batch) > MAX_ISBN_RESULTS:
+        if len(isbn_batch) > MAX_SELECT_RESULTS:
             raise IsbnBatchIsTooBigError
 
         async with self._session() as session:
@@ -75,9 +77,8 @@ class BooksRepository(PostgresRepository):
             )
             results = (await session.execute(query)).unique().scalars().all()
 
-        prepared_results = []
-        for result in results:
-            prepared_result = Book(
+        return [
+            Book(
                 title=result.title,
                 author=result.author,
                 isbn=result.isbn,
@@ -90,9 +91,8 @@ class BooksRepository(PostgresRepository):
                 url=result.url,
                 status=result.status,
             )
-            prepared_results.append(prepared_result)
-
-        return prepared_results
+            for result in results
+        ]
 
     async def upsert_book_batch(self, books: list[Book]) -> None:
         """
@@ -143,3 +143,50 @@ class BooksRepository(PostgresRepository):
         async with self._session() as session:
             await session.execute(stmt, [record.model_dump(mode='json') for record in book_genres])
             await session.commit()
+
+    async def count_books_by_author(self, author: str) -> int:
+        """
+        Count books by author.
+
+        Args:
+            author: author name.
+
+        Returns:
+            count of books by author.
+        """
+        stmt = select(func.count()).select_from(Books).where(Books.author == author)
+        async with self._session() as session:
+            result = (await session.execute(stmt)).scalar_one()
+
+            return result
+
+    async def get_books_by_author(self, author: str) -> list[Book]:
+        """
+        Get books by author. Limited by 100 records.
+
+        Args:
+            author: author name.
+
+        Returns:
+            list of books by this author.
+        """
+        stmt = select(Books).where(Books.author == author).limit(MAX_SELECT_RESULTS)
+        async with self._session() as session:
+            results = (await session.execute(stmt)).scalars().all()
+
+        return [
+            Book(
+                title=result.title,
+                author=result.author,
+                isbn=result.isbn,
+                source=result.source,
+                genres=[genre.name for genre in result.genres],
+                genre_ids=[genre.id for genre in result.genres],
+                genres_raw=result.genres_raw,
+                publisher=result.publisher,
+                publisher_id=result.publisher_id,
+                url=result.url,
+                status=result.status,
+            )
+            for result in results
+        ]

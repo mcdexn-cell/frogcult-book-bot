@@ -1,7 +1,7 @@
 """
 Provide bot service implementation.
 """
-
+from src.repositories.books import BooksRepository
 from src.repositories.genres import GenresRepository
 from src.repositories.publishers import PublishersRepository
 from src.repositories.users import UsersRepository
@@ -16,6 +16,7 @@ class BookBotService:
     """
     def __init__(
             self,
+            books_repository: BooksRepository,
             users_repository: UsersRepository,
             genres_repository: GenresRepository,
             publisher_extractor: PhraseExtractionService,
@@ -27,6 +28,7 @@ class BookBotService:
         Args:
             users_repository: users repository instance.
         """
+        self._books_repository = books_repository
         self._users_repository = users_repository
         self._genres_repository = genres_repository
         self._publisher_extractor = publisher_extractor
@@ -118,3 +120,47 @@ class BookBotService:
             genre_id=genre_id,
             is_subscribed=is_subscribed,
         )
+
+    async def toggle_author_subscription(self, user_id: int, author: str, is_subscribed: bool) -> None:
+        """
+        Toggle genre subscription in database.
+
+        Args:
+            user_id: user ID to toggle.
+            author: author to toggle.
+            is_subscribed: is user already subscribed to the genre.
+        """
+        await self._users_repository.toggle_author_subscription(
+            user_id=user_id,
+            author=author.title(),
+            is_subscribed=is_subscribed,
+        )
+
+    async def list_user_subscribed_authors(self, user_id: int) -> list[str]:
+        """
+        List all authors subscriptions for user.
+
+        Args:
+            user_id: user id.
+
+        Returns:
+            list of authors subscriptions.
+        """
+        print(user_id)
+        user_data = await self._users_repository.get_user_by_id(user_id=user_id)
+
+        return user_data.subscribed_authors
+
+    async def get_author_books_count(self, author: str) -> int:
+        """
+        Count author's books.
+
+        Args:
+            author: author name.
+
+        Returns:
+            count of author's books.
+        """
+        books_count = await self._books_repository.count_books_by_author(author=author.title())
+
+        return books_count
