@@ -9,13 +9,12 @@ from sqlalchemy import (
     Column,
     DateTime,
     Enum,
-    Float,
     ForeignKey,
+    Index,
     Integer,
     JSON,
     String,
     Table,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -23,6 +22,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 
 from src.enums.book import (
     BookStatus,
@@ -71,7 +71,7 @@ class BookAlerts(Base):
     """
     __tablename__ = "book_alerts"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     isbn: Mapped[int] = mapped_column(BigInteger, ForeignKey(Books.isbn))
     status_before: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
     status_after: Mapped[BookStatus] = mapped_column(Enum(BookStatus), nullable=True)
@@ -85,9 +85,15 @@ class Users(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    subscribed_genres: Mapped[list] = mapped_column(JSON, nullable=True)
-    subscribed_publishers: Mapped[list] = mapped_column(JSON, nullable=True)
-    subscribed_authors: Mapped[list] = mapped_column(JSON, nullable=True)
+    subscribed_genres: Mapped[list] = mapped_column(JSONB, default=list)
+    subscribed_publishers: Mapped[list] = mapped_column(JSONB, default=list)
+    subscribed_authors: Mapped[list] = mapped_column(JSONB, default=list)
+
+    __table_args__ = (
+        Index("ix_users_subscribed_genres", "subscribed_genres", postgresql_using="gin"),
+        Index("ix_users_subscribed_publishers", "subscribed_publishers", postgresql_using="gin"),
+        Index("ix_users_subscribed_authors", "subscribed_authors", postgresql_using="gin"),
+    )
 
 
 class Publishers(Base):

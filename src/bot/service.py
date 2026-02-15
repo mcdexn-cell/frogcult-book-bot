@@ -146,7 +146,6 @@ class BookBotService:
         Returns:
             list of authors subscriptions.
         """
-        print(user_id)
         user_data = await self._users_repository.get_user_by_id(user_id=user_id)
 
         return user_data.subscribed_authors

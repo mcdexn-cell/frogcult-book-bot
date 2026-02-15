@@ -1,10 +1,12 @@
 """
 Scraper class implementation.
 """
-
+import asyncio
+import logging
 from collections import deque
 from typing import Any
 
+from src.bot.notifier import BookBotNotifierService
 from src.enums.book import STATUS_REWRITE_RULES
 from src.repositories.books import BooksRepository
 from src.scraper.book.factory import BookScraperFactory
@@ -15,6 +17,9 @@ from src.settings import settings
 from src.structures.book import Book, BookAlert
 
 
+logger = logging.getLogger(__name__)
+
+
 class MainScraper:
     """
     Main scraper class.
@@ -23,6 +28,7 @@ class MainScraper:
     def __init__(
             self,
             books_repository: BooksRepository,
+            notifier_service: BookBotNotifierService,
             scraper_engine: PlaywrightScraperEngine,
             book_scraper_params: dict[str, Any],
     ) -> None:
@@ -34,14 +40,21 @@ class MainScraper:
             scraper_engine: scraper engine instance.
         """
         self._books_repository = books_repository
+        self._notifier_service = notifier_service
         self._scraper_engine = scraper_engine
         self._book_scraper_params = book_scraper_params
 
-    async def _handle_alerts(self, alerts: list[BookAlert]):
+    async def _handle_alerts(self, alerts: list[BookAlert], prepared_books: list[Book]) -> None:
         """
         Process found book alerts.
+
+        Args:
+            alerts: list of book alerts.
+            prepared_books: list of prepared books.
         """
-        pass
+        tasks = [self._notifier_service.notify_book_subscribers(book=book) for book in prepared_books]
+        await asyncio.gather(*tasks)
+        await self._books_repository.insert_book_alerts(alerts=alerts)
 
     async def _process_book_batch(self, books: list[Book], handle_alerts: bool) -> None:
         """
@@ -50,7 +63,6 @@ class MainScraper:
         alerts = []
 
         existing_books = await self._books_repository.get_by_isbn_batch(isbn_batch=[book.isbn for book in books])
-        print(existing_books)
         existing_books_by_isbn = {book.isbn: book for book in existing_books}
 
         prepared_books = []
@@ -59,30 +71,30 @@ class MainScraper:
             if not existing_book:
                 prepared_books.append(book)
                 alerts.append(BookAlert(isbn=book.isbn, status_after=book.status))
+                logger.debug('New book  %d', book.isbn)
                 continue
 
             if existing_book.status in STATUS_REWRITE_RULES.get(book.status, []):
-                print('Book rewrite - status supremacy', book.isbn)
+                logger.debug('Book rewrite - status supremacy  %d', book.isbn)
                 prepared_books.append(book)
                 alerts.append(BookAlert(isbn=book.isbn, status_before=existing_book.status, status_after=book.status))
                 continue
 
             if existing_book.source != existing_book.publisher and book.source == book.publisher:
-                print('Book rewrite - source supremacy', book.isbn)
+                logger.debug('Book rewrite - source supremacy  %d', book.isbn)
                 prepared_books.append(book)
 
             if existing_book.genres and book.genres and set(existing_book.genres) != set(book.genres):
-                print('Book update - genres', book.isbn, existing_book.genres, book.genres)
+                logger.debug('Book update - genres  %d, %s -> %s', book.isbn, existing_book.genres, book.genres)
                 combined_genres = list(set(existing_book.genres + book.genres))
                 existing_book.genres = combined_genres
                 prepared_books.append(existing_book)
 
-        if alerts and handle_alerts:
-            await self._handle_alerts(alerts=alerts)
-
         if prepared_books:
-            print(prepared_books)
             await self._books_repository.upsert_book_batch(books=prepared_books)
+
+        if alerts and handle_alerts:
+            await self._handle_alerts(alerts=alerts, prepared_books=prepared_books)
 
     async def run_with_config(self, config: list[PublisherConfig], handle_alerts: bool) -> None:
         """

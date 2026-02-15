@@ -46,9 +46,7 @@ class BaseBookScraper:
         async with self._semaphore:
             async with self._scraper.get_page() as page:
                 await page.goto(url=url)
-                print(url)
                 parsed_results = await parse_config(config=config, target=page)
-                print(parsed_results)
 
                 for field in REQUIRED_FIELDS:
                     if field not in parsed_results:

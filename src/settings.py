@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     """
     Settings class.
     """
+    log_level: str = 'DEBUG'
+
     scraper: ScraperSettings = ScraperSettings()
 
     postgres_url: str

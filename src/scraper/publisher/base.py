@@ -2,6 +2,7 @@
 Provide base publisher scraper.
 """
 import asyncio
+import logging
 from string import Template
 from typing import AsyncIterator
 from urllib.parse import urlparse
@@ -13,6 +14,9 @@ from src.scraper.config import PublisherConfig
 from src.scraper.engine import PlaywrightScraperEngine
 from src.scraper.utils import parse_config
 from src.structures.scraper import ParserFieldConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class BasePublisherScraper:
@@ -64,8 +68,16 @@ class BasePublisherScraper:
         while True:
             page_url = Template(url).substitute(page_number=page_number)
             async with self._scraper.get_page() as page:
-                await page.goto(url=page_url)
+                try:
+                    await page.goto(url=page_url)
+
+                except Exception as e:
+                    logger.error(e)
+                    return
+
+                print(page_url)
                 book_urls = await parse_config(config=config, target=page)
+                print(book_urls)
                 if 'book_urls' not in book_urls:
                     break
 

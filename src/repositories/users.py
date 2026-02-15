@@ -2,12 +2,17 @@
 Provide users repository implementation.
 """
 
+from typing import AsyncIterator
+
 from sqlalchemy import (
+    or_,
     select,
+    text,
     update,
 )
 from sqlalchemy.dialects.postgresql import insert
 
+from src.database.constants import SELECT_BATCH_SIZE
 from src.database.models import Users
 from src.repositories.base import PostgresRepository
 from src.exceptions.users import AuthorSubscriptionLimitReachedError
@@ -125,3 +130,39 @@ class UsersRepository(PostgresRepository):
         async with self._session() as session:
             await session.execute(stmt)
             await session.commit()
+
+    async def iter_subscribed_user_ids_batches(
+        self,
+        publisher_id: int,
+        author: str,
+        genre_ids: list[int],
+    ) -> AsyncIterator[list[int]]:
+        """
+        Iterate over batches of subscribed user IDs by the given conditions.
+
+        Args:
+            publisher_id: publisher ID users subscribed to.
+            author: author ID users subscribed to.
+            genre_ids: genre IDs users subscribed to.
+
+        Yields:
+            batches of user IDs by the given conditions.
+        """
+        stmt = (
+            select(Users)
+            .where(
+                or_(
+                    Users.subscribed_publishers.contains([publisher_id]),
+                    Users.subscribed_authors.contains([author]),
+                    text("subscribed_genres ?| :genres"),
+                )
+            )
+            .params(genres=[str(genre_id) for genre_id in genre_ids])
+            .execution_options(yield_per=SELECT_BATCH_SIZE)
+        )
+
+        async with self._session() as session:
+            results = await session.stream_scalars(stmt)
+
+            async for batch in results.partitions(SELECT_BATCH_SIZE):
+                yield [user.id for user in batch]

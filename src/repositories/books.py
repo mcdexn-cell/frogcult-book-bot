@@ -9,18 +9,18 @@ from sqlalchemy import (
 from sqlalchemy.orm import joinedload
 from sqlalchemy.dialects.postgresql import insert
 
+from src.database.constants import SELECT_BATCH_SIZE
 from src.database.models import (
     Books,
+    BookAlerts,
     books_genres,
 )
 from src.repositories.base import PostgresRepository
 from src.repositories.errors import IsbnBatchIsTooBigError
 from src.structures.book import (
     Book,
-    BookGenresRecord,
+    BookGenresRecord, BookAlert,
 )
-
-MAX_SELECT_RESULTS = 100
 
 
 class BooksRepository(PostgresRepository):
@@ -68,7 +68,7 @@ class BooksRepository(PostgresRepository):
         Returns:
             list of Book objects.
         """
-        if len(isbn_batch) > MAX_SELECT_RESULTS:
+        if len(isbn_batch) > SELECT_BATCH_SIZE:
             raise IsbnBatchIsTooBigError
 
         async with self._session() as session:
@@ -170,7 +170,7 @@ class BooksRepository(PostgresRepository):
         Returns:
             list of books by this author.
         """
-        stmt = select(Books).where(Books.author == author).limit(MAX_SELECT_RESULTS)
+        stmt = select(Books).where(Books.author == author).limit(SELECT_BATCH_SIZE)
         async with self._session() as session:
             results = (await session.execute(stmt)).scalars().all()
 
@@ -190,3 +190,17 @@ class BooksRepository(PostgresRepository):
             )
             for result in results
         ]
+
+    async def insert_book_alerts(self, alerts: list[BookAlert]) -> None:
+        """
+        Insert book alerts.
+
+        Args:
+            alerts: list of BookAlert objects to insert.
+        """
+        stmt = insert(BookAlerts)
+        stmt = stmt.on_conflict_do_nothing()
+
+        async with self._session() as session:
+            await session.execute(stmt, [alert.model_dump(mode='json') for alert in alerts])
+            await session.commit()

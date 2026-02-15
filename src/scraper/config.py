@@ -59,6 +59,7 @@ PUBLISHERS_CONFIG = [
     PublisherConfig(
         name='BookChef',
         config={
+            'book_urls': ParserFieldConfig(selector='#catalog .item-all-title a.item-title ', attribute='href', mode=ParseMode.ALL)
         },
         book_page_config={
             'title': ParserFieldConfig(selector='.body_text h1'),
@@ -67,7 +68,6 @@ PUBLISHERS_CONFIG = [
             'isbn': ParserFieldConfig(selector='.catalog-detail-property:has-text(\'ISBN\') .val'),
             'genres': ParserFieldConfig(selector='.catalog-detail-property:has-text(\'Жанр\') .val'),
         },
-        new_books_url='https://bookchef.ua/catalog/newproduct/?PAGEN_1=${page_number}',
         preorder_books_url='https://bookchef.ua/catalog/preorder/?PAGEN_1=${page_number}'
     )
 ]

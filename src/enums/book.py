@@ -147,3 +147,10 @@ STATUS_REWRITE_RULES = {
     BookStatus.PREORDER: [BookStatus.COMING_SOON],
     BookStatus.COMING_SOON: [],
 }
+
+
+BOOK_STATUS_UKRAINIAN_TEXT = {
+    BookStatus.NEW: 'новинки',
+    BookStatus.PREORDER: 'передзамовлення',
+    BookStatus.COMING_SOON: 'анонс',
+}
